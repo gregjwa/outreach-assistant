@@ -80,6 +80,12 @@ ${profileJson}
 
   try {
     console.log(`[Gemini] Starting generation for profile: ${profile.name}`);
+    console.log("--- SYSTEM PROMPT SENT TO GEMINI ---");
+    console.log(systemPrompt);
+    console.log("--- USER PROMPT SENT TO GEMINI ---");
+    console.log(userPrompt);
+    console.log("------------------------------------");
+
     const startTime = Date.now();
     
     const result = await model.generateContent(userPrompt);

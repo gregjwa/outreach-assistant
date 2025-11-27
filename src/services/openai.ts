@@ -64,6 +64,12 @@ ${profileJson}
 
   try {
     console.log(`[OpenAI] Starting generation for profile: ${profile.name} using ${modelName}`);
+    console.log("--- SYSTEM PROMPT SENT TO OPENAI ---");
+    console.log(systemPrompt);
+    console.log("--- USER PROMPT SENT TO OPENAI ---");
+    console.log(userPrompt);
+    console.log("------------------------------------");
+
     const startTime = Date.now();
 
     const completion = await openai.chat.completions.create({
