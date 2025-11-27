@@ -63,8 +63,6 @@ Do NOT write a message.`,
     generationConfig: {
       responseMimeType: "application/json",
       responseSchema: ICP_RESPONSE_SCHEMA,
-      // @ts-ignore
-      thinkingConfig: { thinkingLevel: "low" },
     },
   });
 
