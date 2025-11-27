@@ -86,7 +86,7 @@ export const logToSheets = async (entry: LogEntry) => {
     
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: "LLM Outreach Log!A:P", // Extended range
+      range: "'LLM Outreach Log'!A:P", // Quoted sheet name for safety with spaces
       valueInputOption: "RAW",
       requestBody: {
         values,

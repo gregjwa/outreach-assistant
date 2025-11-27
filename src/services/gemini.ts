@@ -3,6 +3,7 @@ import { Profile } from "../types";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
+import { GenerationResponse } from "../llm_factory";
 
 dotenv.config();
 
@@ -36,18 +37,11 @@ const RESPONSE_SCHEMA = {
   required: ["icpScore", "icpReason", "icpLearning"],
 };
 
-interface GeminiResponse {
-  icpScore: number;
-  icpReason: string;
-  icpLearning: string[];
-  message?: string | null;
-}
-
-export const generateMessage = async (
+export const generateMessageGemini = async (
   profile: Profile,
   thesis: string,
   icpDescription: string
-): Promise<GeminiResponse> => {
+): Promise<GenerationResponse> => {
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not set");
   }
@@ -85,12 +79,18 @@ ${profileJson}
 `;
 
   try {
+    console.log(`[Gemini] Starting generation for profile: ${profile.name}`);
+    const startTime = Date.now();
+    
     const result = await model.generateContent(userPrompt);
     const response = await result.response;
     const text = response.text();
     
+    const duration = Date.now() - startTime;
+    console.log(`[Gemini] Generation completed in ${duration}ms`);
+
     try {
-        const data = JSON.parse(text) as GeminiResponse;
+        const data = JSON.parse(text) as GenerationResponse;
         return data;
     } catch (parseError) {
         console.error("Failed to parse JSON response:", text);

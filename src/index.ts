@@ -2,7 +2,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { GenerateRequest, GenerateResponse } from "./types";
-import { generateMessage } from "./services/gemini";
+import { generateMessage } from "./llm_factory";
 import { logToSheets } from "./services/sheets";
 import fs from "fs";
 import path from "path";
