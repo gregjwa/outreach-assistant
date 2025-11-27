@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import { GenerateRequest, GenerateResponse } from "./types";
 import { generateMessage } from "./services/gemini";
 import { logToSheets } from "./services/sheets";
+import fs from "fs";
+import path from "path";
 
 dotenv.config();
 
@@ -16,6 +18,46 @@ app.use(express.json());
 // Health check
 app.get("/health", (req, res) => {
   res.status(200).send("OK");
+});
+
+// Admin Page
+app.get("/admin", (req, res) => {
+  const adminPath = path.resolve(process.cwd(), "public", "admin.html");
+  res.sendFile(adminPath);
+});
+
+// Update System Prompt Endpoint
+app.post("/api/update-prompt", (req, res) => {
+  const { prompt } = req.body;
+  if (!prompt || typeof prompt !== "string") {
+    return res.status(400).json({ error: "Prompt string is required" });
+  }
+
+  try {
+    const promptPath = path.resolve(process.cwd(), "system_prompt.txt");
+    fs.writeFileSync(promptPath, prompt, "utf-8");
+    console.log("System prompt updated via API.");
+    res.status(200).json({ message: "System prompt updated successfully" });
+  } catch (error) {
+    console.error("Error writing system prompt:", error);
+    res.status(500).json({ error: "Failed to update system prompt" });
+  }
+});
+
+// Get System Prompt Endpoint
+app.get("/api/get-prompt", (req, res) => {
+  try {
+    const promptPath = path.resolve(process.cwd(), "system_prompt.txt");
+    if (fs.existsSync(promptPath)) {
+      const prompt = fs.readFileSync(promptPath, "utf-8");
+      res.status(200).json({ prompt });
+    } else {
+      res.status(404).json({ error: "System prompt file not found" });
+    }
+  } catch (error) {
+    console.error("Error reading system prompt:", error);
+    res.status(500).json({ error: "Failed to read system prompt" });
+  }
 });
 
 app.post("/api/generate", async (req: Request<{}, {}, GenerateRequest>, res: Response<GenerateResponse>) => {
