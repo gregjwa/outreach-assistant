@@ -36,7 +36,7 @@ app.post("/api/update-prompt", (req, res) => {
   try {
     const promptPath = path.resolve(process.cwd(), "system_prompt.txt");
     fs.writeFileSync(promptPath, prompt, "utf-8");
-    console.log("System prompt updated via API.");
+    console.log("System prompt updated via API. New length:", prompt.length);
     res.status(200).json({ message: "System prompt updated successfully" });
   } catch (error) {
     console.error("Error writing system prompt:", error);
@@ -61,6 +61,7 @@ app.get("/api/get-prompt", (req, res) => {
 });
 
 app.post("/api/generate", async (req: Request<{}, {}, GenerateRequest>, res: Response<GenerateResponse>) => {
+  console.log("Received generation request for:", req.body.profile?.name || "Unknown");
   try {
     const { profile, campaignId, thesis, currentUrl } = req.body;
 
