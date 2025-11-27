@@ -3,11 +3,12 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { GenerateRequest, GenerateResponse } from "./types";
 import { generateMessage, setProvider, getProvider } from "./llm_factory";
-import { logToSheets } from "./services/sheets";
+import { logToAttio, AttioLogEntry } from "./services/attio";
 import fs from "fs";
 import path from "path";
 
 dotenv.config();
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -86,6 +87,29 @@ app.get("/api/get-prompt", (req, res) => {
   }
 });
 
+app.post('/api/log-attio', async (req, res) => {
+  try {
+    const { person, jobTitle, company, linkedIn, description, notes, stage } = req.body;
+
+    console.log("Logging to Attio:", person);
+    
+    await logToAttio({
+      person,
+      jobTitle,
+      company,
+      linkedIn,
+      description,
+      notes,
+      stage
+    });
+
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Attio Log Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post("/api/generate", async (req: Request<{}, {}, GenerateRequest>, res: Response<GenerateResponse>) => {
   console.log("Received generation request for:", req.body.profile?.name || "Unknown");
   try {
@@ -119,20 +143,20 @@ app.post("/api/generate", async (req: Request<{}, {}, GenerateRequest>, res: Res
     const generatedMessage = result.message || "";
     const messageLength = generatedMessage.length;
 
-    await logToSheets({
-      campaign_id: campaignId || "",
-      linkedin_url: profile.linkedinUrl || currentUrl || "",
-      name: profile.name,
-      headline: profile.headline || "",
-      location: profile.location || "",
-      raw_profile_json: JSON.stringify(profile),
-      generated_message: generatedMessage,
-      message_length: messageLength,
-      thesis_used: thesisToUse,
-      icp_score: result.icpScore,
-      icp_reason: result.icpReason,
-      icp_learning: result.icpLearning.join(", "),
-    });
+    // await logToSheets({
+    //   campaign_id: campaignId || "",
+    //   linkedin_url: profile.linkedinUrl || currentUrl || "",
+    //   name: profile.name,
+    //   headline: profile.headline || "",
+    //   location: profile.location || "",
+    //   raw_profile_json: JSON.stringify(profile),
+    //   generated_message: generatedMessage,
+    //   message_length: messageLength,
+    //   thesis_used: thesisToUse,
+    //   icp_score: result.icpScore,
+    //   icp_reason: result.icpReason,
+    //   icp_learning: result.icpLearning.join(", "),
+    // });
 
     res.json({
       message: result.message || null, // Explicitly null if skipped
