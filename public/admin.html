@@ -3,44 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Prompt Admin</title>
+    <title>System Admin</title>
     <style>
         body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-        textarea { width: 100%; height: 600px; font-family: monospace; padding: 1rem; margin: 1rem 0; }
+        textarea { width: 100%; height: 500px; font-family: monospace; padding: 1rem; margin: 1rem 0; }
         button { padding: 0.5rem 1rem; font-size: 1rem; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
         button:hover { background: #0056b3; }
         #status { margin-top: 1rem; font-weight: bold; }
         .warning { background: #fff3cd; color: #856404; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; }
+        .config-section { margin-bottom: 2rem; padding: 1rem; border: 1px solid #ccc; border-radius: 4px; }
+        label { font-weight: bold; margin-right: 1rem; }
+        select { padding: 0.5rem; font-size: 1rem; }
     </style>
 </head>
 <body>
-    <h1>System Prompt Editor</h1>
+    <h1>System Admin</h1>
+    
     <div class="warning">
-        Note: Changes made here are temporary and will be lost if the server restarts or redeploys. 
-        Copy your final prompt to your local <code>system_prompt.txt</code> and commit to Git to make permanent.
+        Note: Changes made here are temporary and will be lost if the server restarts or redeploys.
     </div>
-    <textarea id="promptEditor"></textarea>
-    <br>
-    <button onclick="savePrompt()">Save Prompt</button>
-    <div id="status"></div>
+
+    <div class="config-section">
+        <h2>LLM Configuration</h2>
+        <div>
+            <label for="provider">Active Provider:</label>
+            <select id="provider">
+                <option value="gemini">Gemini 3 Pro (Google)</option>
+                <option value="openai">GPT-4o (OpenAI)</option>
+            </select>
+            <button onclick="saveConfig()" style="margin-left: 1rem;">Update Provider</button>
+        </div>
+        <div id="configStatus" style="margin-top: 0.5rem;"></div>
+    </div>
+
+    <div class="config-section">
+        <h2>System Prompt</h2>
+        <textarea id="promptEditor"></textarea>
+        <br>
+        <button onclick="savePrompt()">Save Prompt</button>
+        <div id="promptStatus" style="margin-top: 0.5rem;"></div>
+    </div>
 
     <script>
-        async function loadPrompt() {
+        async function loadData() {
             try {
-                const res = await fetch('/api/get-prompt');
-                const data = await res.json();
-                if (data.prompt) {
-                    document.getElementById('promptEditor').value = data.prompt;
+                // Load Prompt
+                const promptRes = await fetch('/api/get-prompt');
+                const promptData = await promptRes.json();
+                if (promptData.prompt) {
+                    document.getElementById('promptEditor').value = promptData.prompt;
+                }
+
+                // Load Config
+                const configRes = await fetch('/api/config');
+                const configData = await configRes.json();
+                if (configData.provider) {
+                    document.getElementById('provider').value = configData.provider;
                 }
             } catch (err) {
-                console.error('Failed to load prompt', err);
-                document.getElementById('status').innerText = 'Error loading prompt.';
+                console.error('Failed to load data', err);
+            }
+        }
+
+        async function saveConfig() {
+            const provider = document.getElementById('provider').value;
+            const statusEl = document.getElementById('configStatus');
+            statusEl.innerText = 'Updating...';
+            
+            try {
+                const res = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ provider })
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    statusEl.innerText = `Updated! Active provider is now: ${data.provider}`;
+                    statusEl.style.color = 'green';
+                } else {
+                    statusEl.innerText = 'Error updating config.';
+                    statusEl.style.color = 'red';
+                }
+            } catch (err) {
+                console.error(err);
+                statusEl.innerText = 'Network error.';
+                statusEl.style.color = 'red';
             }
         }
 
         async function savePrompt() {
             const prompt = document.getElementById('promptEditor').value;
-            const statusEl = document.getElementById('status');
+            const statusEl = document.getElementById('promptStatus');
             statusEl.innerText = 'Saving...';
             
             try {
@@ -51,7 +105,7 @@
                 });
                 
                 if (res.ok) {
-                    statusEl.innerText = 'Saved successfully! (Changes apply to next request)';
+                    statusEl.innerText = 'Saved successfully!';
                     statusEl.style.color = 'green';
                 } else {
                     statusEl.innerText = 'Error saving prompt.';
@@ -64,8 +118,7 @@
             }
         }
 
-        loadPrompt();
+        loadData();
     </script>
 </body>
 </html>
-

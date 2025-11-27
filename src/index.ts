@@ -2,7 +2,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { GenerateRequest, GenerateResponse } from "./types";
-import { generateMessage } from "./llm_factory";
+import { generateMessage, setProvider, getProvider } from "./llm_factory";
 import { logToSheets } from "./services/sheets";
 import fs from "fs";
 import path from "path";
@@ -12,8 +12,19 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors({
+  origin: "*", // Allow all origins (including chrome extensions and linkedin content scripts)
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(express.json());
+
+// Log all requests to debug CORS/Traffic
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+  next();
+});
 
 // Health check
 app.get("/health", (req, res) => {
@@ -24,6 +35,21 @@ app.get("/health", (req, res) => {
 app.get("/admin", (req, res) => {
   const adminPath = path.resolve(process.cwd(), "public", "admin.html");
   res.sendFile(adminPath);
+});
+
+// Configuration Endpoints
+app.get("/api/config", (req, res) => {
+  res.json({ provider: getProvider() });
+});
+
+app.post("/api/config", (req, res) => {
+  const { provider } = req.body;
+  try {
+    setProvider(provider);
+    res.json({ provider: getProvider() });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // Update System Prompt Endpoint
