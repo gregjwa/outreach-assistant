@@ -114,7 +114,7 @@ export const logToAttio = async (entry: AttioLogEntry) => {
           full_name: entry.person
         }],
         ...(entry.jobTitle && { "job_title": [{ value: entry.jobTitle }] }),
-        ...(entry.company && { "company": [{ value: entry.company }] }),
+        // ...(entry.company && { "company": [{ value: entry.company }] }),
         ...(entry.linkedIn && { "linkedin": [{ value: entry.linkedIn }] }), 
         ...(entry.description && { "description": [{ value: entry.description }] }),
       }
