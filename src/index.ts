@@ -87,23 +87,24 @@ app.get("/api/get-prompt", (req, res) => {
   }
 });
 
-app.post('/api/log-attio', async (req, res) => {
+  app.post('/api/log-attio', async (req, res) => {
   try {
-    const { person, jobTitle, company, linkedIn, description, notes, stage } = req.body;
+    const { person, jobTitle, company, linkedIn, description, notes, stage, outreachVariant } = req.body;
 
     console.log("Logging to Attio:", person);
     
-    await logToAttio({
+    const result = await logToAttio({
       person,
       jobTitle,
       company,
       linkedIn,
       description,
       notes,
-      stage
+      stage,
+      outreachVariant
     });
 
-    res.json({ success: true });
+    res.json({ success: true, data: result });
   } catch (error: any) {
     console.error("Attio Log Error:", error);
     res.status(500).json({ error: error.message });
